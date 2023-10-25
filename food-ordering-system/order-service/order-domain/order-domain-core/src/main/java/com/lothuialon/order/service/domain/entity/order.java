@@ -44,7 +44,7 @@ public class order extends AggregateRoot<orderId>{
         }
     };
 
-    private void validateOrder(){
+    public void validateOrder(){
         validateInit();
         validateTotalPrice();
         validateItems();
@@ -58,21 +58,21 @@ public class order extends AggregateRoot<orderId>{
         }).reduce(money.ZERO, money::add);
 
         if(!price.equals(orderItemsTotal)){
-            throw new orderDomainException("Validation of the items is unsuccessfull, total price of order: "
+            throw new orderDomainException("Validation of the items is unsuccessful, total price of order: "
             + price.getAmount() + " is not equal to total price of items: " + orderItemsTotal);
         }
     }
 
     private void validateItemPrice(orderItem item) {
         if(!item.isPriceValid()){
-            throw new orderDomainException("Validation of the items is unsuccessfull, total price of item: "
+            throw new orderDomainException("Validation of the items is unsuccessful, total price of item: "
             + item.getPrice().getAmount() + " is not valid for assigned product: " + item.getProduct().getId().getValue());
         }
     }
 
     private void validateTotalPrice() {
         if(price != null || price.isGreaterThanZero()){
-
+            throw new orderDomainException("Validation of total price is unsuccesful");
         }
     }
 
@@ -82,6 +82,51 @@ public class order extends AggregateRoot<orderId>{
             throw new orderDomainException("Order can't be initialized");
         }
     }
+
+    //----------------------------------------------
+    public void pay(){
+        if(orderStatus != orderStatus.PENDING){
+            throw new orderDomainException("Order status is unvalid");
+        }
+        //logic
+        orderStatus = orderStatus.APPROVED;
+    }
+
+    public void approve(){
+        if(orderStatus != orderStatus.APPROVED){
+            throw new orderDomainException("Order status is unvalid");
+        }
+        //logic
+        orderStatus = orderStatus.APPROVED;
+    }
+
+    public void initCancel(List<String> failureMessages){
+        if(orderStatus != orderStatus.CANCELLING){
+            throw new orderDomainException("Order status is unvalid");
+        }
+        //logic
+        orderStatus = orderStatus.CANCELLING;
+        updateFailureMessages(failureMessages);
+    }
+
+    private void updateFailureMessages(List<String> failureMessages) {
+        if(this.failureMessages != null && failureMessages != null){
+            this.failureMessages.addAll(failureMessages);
+        }
+        if(this.failureMessages == null ){
+            this.failureMessages = failureMessages;
+        }
+    }
+
+    //both pending and cancelling can transition into cancelled state
+    public void cancel(List<String> failureMessages){
+        if(!(orderStatus != orderStatus.CANCELLING || orderStatus == orderStatus.PENDING)){
+            throw new orderDomainException("Order status is unvalid");
+        }
+        //logic
+        orderStatus = orderStatus.CANCELLED;
+    }
+
 
 
     private order(Builder builder) {
