@@ -1,3 +1,3 @@
 # Spring-E-Commerce-Project
 
-Work In Progress
+Development In Progress
