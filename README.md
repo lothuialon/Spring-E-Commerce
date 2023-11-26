@@ -1,3 +1,3 @@
-# Spring-E-Commerce-Project
+# spring-e-commerce-project
 
 Development In Progress
